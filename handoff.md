@@ -6,6 +6,7 @@
   - `assistente-2n-cati-remoto.xpi` (raiz e dentro de `assistente-2n-cati-remoto/`)
   - `codigo-fonte-assistente-2n.zip` (raiz)
 - **Suíte de Testes**: 81 testes unitários em `tests/` (`python3 -m unittest discover -s tests -p "test_*.py" -v`), todos passando (100% verde).
+- **Repositório GitHub (Privado)**: https://github.com/PedroMachado1/extensoes-cati-tjce
 - **Projetos Disponíveis**:
   - `assistente-2n-cati-remoto/`: Extensão completa do 2N CATI Remoto (v3.1.0).
   - `backlog-1n/`: Extensão autônoma dedicada ao 1N CATI focada exclusivamente no scanner "Aguardando Info (7+ Dias)" em Modo Turbo (v1.0.1).
