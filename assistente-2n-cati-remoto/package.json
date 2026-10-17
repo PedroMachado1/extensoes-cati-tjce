@@ -1,0 +1,10 @@
+{
+  "name": "assistente-2n-cati-remoto",
+  "version": "3.1.0",
+  "description": "Assistente para 2N CATI Remoto com localizador de chamados Assyst e lembretes locais",
+  "scripts": {
+    "build": "python3 build.py"
+  },
+  "author": "Pedro Machado",
+  "license": "MIT"
+}

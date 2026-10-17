@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "Backlog 1N CATI - Aguardando Info (7+ Dias)",
+  "short_name": "Backlog 1N",
+  "version": "1.0.1",
+  "description": "Localizador e auditor de chamados pausados por 'Aguardando Info do Usuário' há 7+ dias da equipe 1N CATI no Assyst (TJCE).",
+  "permissions": [
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://cati.tjce.jus.br/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://cati.tjce.jus.br/*"
+      ],
+      "js": [
+        "content/scanner-1n.js"
+      ],
+      "css": [
+        "content/scanner-1n.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "64": "icons/icon64.png",
+    "96": "icons/icon96.png",
+    "128": "icons/icon128.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "backlog-1n-cati@tjce",
+      "strict_min_version": "115.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  }
+}

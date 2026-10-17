@@ -1,0 +1,798 @@
+/* Estilos da Barra Lateral de Modelos Rápidos para WhatsApp Web */
+
+:root {
+  --cati-wa-primary: #00a884;
+  --cati-wa-primary-hover: #06cf9c;
+  --cati-wa-bg: #ffffff;
+  --cati-wa-surface: #f0f2f5;
+  --cati-wa-card: #ffffff;
+  --cati-wa-border: #e2e8f0;
+  --cati-wa-text: #111b21;
+  --cati-wa-muted: #667781;
+  --cati-wa-danger: #ea4335;
+  --cati-wa-shadow: rgba(11, 20, 26, 0.15);
+}
+
+/* Suporte ao modo escuro nativo do WhatsApp Web */
+body.dark, [data-theme="dark"] {
+  --cati-wa-primary: #00a884;
+  --cati-wa-primary-hover: #06cf9c;
+  --cati-wa-bg: #111b21;
+  --cati-wa-surface: #202c33;
+  --cati-wa-card: #182229;
+  --cati-wa-border: #2a3942;
+  --cati-wa-text: #e9edef;
+  --cati-wa-muted: #8696a0;
+  --cati-wa-danger: #ef4444;
+  --cati-wa-shadow: rgba(0, 0, 0, 0.35);
+}
+
+/* ========================================================================= */
+/* 1. Botão Flutuante Lateral (Aba retrátil)                                 */
+/* ========================================================================= */
+#cati-wa-trigger-btn {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--cati-wa-primary);
+  color: #ffffff;
+  padding: 8px 10px;
+  border-radius: 20px 0 0 20px;
+  box-shadow: -2px 4px 16px var(--cati-wa-shadow);
+  cursor: grab;
+  touch-action: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  user-select: none;
+  transition: background-color 0.2s, box-shadow 0.2s, padding 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-right: none;
+}
+
+#cati-wa-trigger-btn.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+  transition: none !important;
+  box-shadow: -4px 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+#cati-wa-trigger-btn:hover {
+  background-color: var(--cati-wa-primary-hover);
+  padding-right: 14px;
+  box-shadow: -3px 6px 20px rgba(0, 168, 132, 0.4);
+}
+
+#cati-wa-trigger-btn.drawer-open {
+  transform: translateX(100%) !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cati-wa-trigger-grip {
+  font-size: 11px;
+  opacity: 0.6;
+  letter-spacing: -1px;
+  cursor: grab;
+  user-select: none;
+}
+
+.cati-wa-trigger-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.cati-wa-trigger-label {
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+}
+
+.cati-wa-trigger-minimize-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  opacity: 0.75;
+  cursor: pointer;
+  padding: 0 2px 0 4px;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.cati-wa-trigger-minimize-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Modo Minimizado: Aba ultra-compacta (apenas ícone) */
+#cati-wa-trigger-btn.minimized {
+  padding: 8px 8px;
+  gap: 0;
+  opacity: 0.85;
+}
+
+#cati-wa-trigger-btn.minimized:hover {
+  opacity: 1;
+  padding-right: 10px;
+}
+
+#cati-wa-trigger-btn.minimized .cati-wa-trigger-label,
+#cati-wa-trigger-btn.minimized .cati-wa-trigger-grip {
+  display: none !important;
+}
+
+#cati-wa-trigger-btn.minimized .cati-wa-trigger-minimize-btn {
+  transform: rotate(180deg);
+  margin-left: 2px;
+}
+
+/* ========================================================================= */
+/* 2. Barra Lateral (Drawer)                                                 */
+/* ========================================================================= */
+#cati-wa-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 370px;
+  max-width: 92vw;
+  height: 100vh;
+  background-color: var(--cati-wa-bg);
+  color: var(--cati-wa-text);
+  z-index: 100000;
+  box-shadow: -6px 0 28px var(--cati-wa-shadow);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+#cati-wa-drawer.is-open {
+  transform: translateX(0);
+}
+
+/* Header do Drawer */
+.cati-wa-header {
+  padding: 16px 18px;
+  background-color: var(--cati-wa-surface);
+  border-bottom: 1px solid var(--cati-wa-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cati-wa-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cati-wa-text);
+  margin: 0;
+}
+
+.cati-wa-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--cati-wa-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.cati-wa-close-btn:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: var(--cati-wa-text);
+}
+
+/* ========================================================================= */
+/* 2.1 Card de Chamado Ativo (Contexto Sincronizado)                         */
+/* ========================================================================= */
+#cati-wa-active-ticket-card {
+  padding: 12px 18px;
+  background-color: var(--cati-wa-surface);
+  border-bottom: 1px solid var(--cati-wa-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cati-wa-ticket-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cati-wa-ticket-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cati-wa-text);
+}
+
+.cati-wa-ticket-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  letter-spacing: 0.2px;
+  user-select: none;
+}
+
+.cati-wa-badge-assyst {
+  background-color: rgba(0, 168, 132, 0.15);
+  color: var(--cati-wa-primary);
+  border: 1px solid rgba(0, 168, 132, 0.3);
+}
+
+.cati-wa-badge-manual {
+  background-color: rgba(102, 119, 129, 0.15);
+  color: var(--cati-wa-muted);
+  border: 1px solid rgba(102, 119, 129, 0.25);
+}
+
+.cati-wa-ticket-clear {
+  background: transparent;
+  border: none;
+  color: var(--cati-wa-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.cati-wa-ticket-clear:hover {
+  background-color: rgba(234, 67, 53, 0.1);
+  color: var(--cati-wa-danger);
+}
+
+.cati-wa-recent-tickets-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.cati-wa-recent-chip {
+  background-color: var(--cati-wa-bg);
+  border: 1px solid var(--cati-wa-border);
+  color: var(--cati-wa-muted);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.cati-wa-recent-chip:hover {
+  border-color: var(--cati-wa-primary);
+  color: var(--cati-wa-primary);
+}
+
+.cati-wa-recent-chip.active {
+  background-color: var(--cati-wa-primary);
+  border-color: var(--cati-wa-primary);
+  color: #ffffff;
+}
+
+.cati-wa-ticket-inputs {
+  display: flex;
+  gap: 8px;
+}
+
+.cati-wa-ticket-input-num {
+  width: 120px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding: 6px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--cati-wa-border);
+  background-color: var(--cati-wa-bg);
+  color: var(--cati-wa-text);
+  font-size: 11.5px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.cati-wa-ticket-input-num:focus {
+  border-color: var(--cati-wa-primary);
+}
+
+.cati-wa-ticket-input-subject {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 6px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--cati-wa-border);
+  background-color: var(--cati-wa-bg);
+  color: var(--cati-wa-text);
+  font-size: 11.5px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.cati-wa-ticket-input-subject:focus {
+  border-color: var(--cati-wa-primary);
+}
+
+/* Ações superiores: Botão Novo Modelo e Pesquisa */
+.cati-wa-top-actions {
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-bottom: 1px solid var(--cati-wa-border);
+  background-color: var(--cati-wa-bg);
+}
+
+.cati-wa-btn-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: var(--cati-wa-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cati-wa-btn-add:hover {
+  background-color: var(--cati-wa-primary-hover);
+}
+
+.cati-wa-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 11px;
+  border-radius: 7px;
+  border: 1px solid var(--cati-wa-border);
+  background-color: var(--cati-wa-surface);
+  color: var(--cati-wa-text);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.cati-wa-search-input:focus {
+  border-color: var(--cati-wa-primary);
+}
+
+/* Abas de Categorias de Modelos */
+.cati-wa-category-tabs {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.cati-wa-category-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.cati-wa-category-tab {
+  background-color: var(--cati-wa-surface);
+  border: 1px solid var(--cati-wa-border);
+  color: var(--cati-wa-muted);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.cati-wa-category-tab:hover {
+  background-color: rgba(0, 168, 132, 0.08);
+  color: var(--cati-wa-primary);
+  border-color: rgba(0, 168, 132, 0.3);
+}
+
+.cati-wa-category-tab.active {
+  background-color: var(--cati-wa-primary);
+  border-color: var(--cati-wa-primary);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* ========================================================================= */
+/* 3. Formulário de Cadastro / Edição Inline                                 */
+/* ========================================================================= */
+.cati-wa-form-container {
+  padding: 14px 18px;
+  background-color: var(--cati-wa-surface);
+  border-bottom: 1px solid var(--cati-wa-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cati-wa-form-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--cati-wa-text);
+  margin: 0;
+}
+
+/* Chips de inserção rápida de tags dinâmicas */
+.cati-wa-tag-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.cati-wa-tag-chips-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cati-wa-muted);
+}
+
+.cati-wa-tag-chip {
+  background-color: var(--cati-wa-card);
+  border: 1px solid var(--cati-wa-border);
+  color: var(--cati-wa-primary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.cati-wa-tag-chip:hover {
+  background-color: var(--cati-wa-primary);
+  color: #ffffff;
+  border-color: var(--cati-wa-primary);
+  transform: translateY(-1px);
+}
+
+.cati-wa-form-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cati-wa-form-select {
+  width: 125px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--cati-wa-border);
+  border-radius: 6px;
+  background-color: var(--cati-wa-card);
+  color: var(--cati-wa-text);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 7px 8px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.cati-wa-form-select:focus {
+  border-color: var(--cati-wa-primary);
+}
+
+.cati-wa-form-input,
+.cati-wa-form-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--cati-wa-border);
+  border-radius: 6px;
+  background-color: var(--cati-wa-card);
+  color: var(--cati-wa-text);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.cati-wa-form-input:focus,
+.cati-wa-form-textarea:focus {
+  border-color: var(--cati-wa-primary);
+}
+
+.cati-wa-form-textarea {
+  min-height: 80px;
+  resize: vertical;
+  line-height: 1.4;
+}
+
+.cati-wa-form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.cati-wa-btn-save {
+  background-color: var(--cati-wa-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cati-wa-btn-save:hover {
+  background-color: var(--cati-wa-primary-hover);
+}
+
+.cati-wa-btn-cancel {
+  background-color: transparent;
+  color: var(--cati-wa-muted);
+  border: 1px solid var(--cati-wa-border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cati-wa-btn-cancel:hover {
+  background-color: var(--cati-wa-surface);
+  color: var(--cati-wa-text);
+}
+
+/* ========================================================================= */
+/* 4. Lista de Modelos (Cards)                                               */
+/* ========================================================================= */
+.cati-wa-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.cati-wa-empty {
+  text-align: center;
+  color: var(--cati-wa-muted);
+  font-size: 12px;
+  padding: 30px 10px;
+  line-height: 1.5;
+}
+
+.cati-wa-card {
+  background-color: var(--cati-wa-card);
+  border: 1px solid var(--cati-wa-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 1px 3px var(--cati-wa-shadow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.cati-wa-card:hover {
+  border-color: var(--cati-wa-primary);
+  box-shadow: 0 3px 8px var(--cati-wa-shadow);
+}
+
+.cati-wa-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cati-wa-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cati-wa-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cati-wa-text);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cati-wa-card-category {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: var(--cati-wa-surface);
+  color: var(--cati-wa-muted);
+  border: 1px solid var(--cati-wa-border);
+  white-space: nowrap;
+}
+
+.cati-wa-card-category.cat-contato {
+  background-color: rgba(0, 168, 132, 0.12);
+  color: var(--cati-wa-primary);
+  border-color: rgba(0, 168, 132, 0.25);
+}
+
+.cati-wa-card-category.cat-acompanhamento {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.cati-wa-card-category.cat-encerramento {
+  background-color: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.cati-wa-card-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cati-wa-tool-btn {
+  background: transparent;
+  border: none;
+  color: var(--cati-wa-muted);
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.cati-wa-tool-btn:hover {
+  background-color: var(--cati-wa-surface);
+  color: var(--cati-wa-text);
+}
+
+.cati-wa-tool-btn.btn-delete:hover {
+  color: var(--cati-wa-danger);
+}
+
+.cati-wa-card-body {
+  font-size: 12px;
+  color: var(--cati-wa-muted);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 120px;
+  overflow-y: auto;
+  padding: 6px 8px;
+  background-color: var(--cati-wa-surface);
+  border-radius: 6px;
+  border: 1px solid var(--cati-wa-border);
+}
+
+.cati-wa-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cati-wa-btn-insert {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background-color: var(--cati-wa-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cati-wa-btn-insert:hover {
+  background-color: var(--cati-wa-primary-hover);
+  transform: translateY(-1px);
+}
+
+.cati-wa-btn-insert:active {
+  transform: translateY(0);
+}
+
+.cati-wa-btn-insert.success {
+  background-color: #10b981 !important;
+}
+
+.cati-wa-btn-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background-color: var(--cati-wa-surface);
+  color: var(--cati-wa-text);
+  border: 1px solid var(--cati-wa-border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cati-wa-btn-copy:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.cati-wa-btn-copy.success {
+  background-color: #ecfdf5 !important;
+  color: #065f46 !important;
+  border-color: #10b981 !important;
+}
+
+/* ========================================================================= */
+/* 5. Toast de Feedback                                                     */
+/* ========================================================================= */
+.cati-wa-toast {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1e293b;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 100001;
+  white-space: nowrap;
+}
+
+.cati-wa-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-6px);
+}

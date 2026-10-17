@@ -1,0 +1,18 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Arquivos temporários e de análise
+scratch/
+resultado.txt
+.superpowers/
+
+# Pacotes legados de terceiros (auditoria)
+Assyst_Mod_Firefox_V5.5.xpi
+Calculadora de SLA v2.18.12.zip
+Calculadora de SLA v2.3.0.xpi
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db

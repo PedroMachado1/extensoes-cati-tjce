@@ -1,0 +1,11 @@
+{
+    "extensionName": {
+        "message": "Assistente - 2N CATI Remoto"
+    },
+    "extensionDescription": {
+        "message": "Assistente para 2N CATI Remoto com localização de agendamentos no Assyst e gestão de lembretes locais."
+    },
+    "actionTitle": {
+        "message": "Abrir Assistente - 2N CATI Remoto"
+    }
+}

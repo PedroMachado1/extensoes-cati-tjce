@@ -1,0 +1,247 @@
+/* Estilos de Alertas e Validações - Assistente 2N CATI Remoto */
+
+/* ========================================================================= */
+/* 1. Contorno vermelho para campos pendentes (Edifício e Item B)            */
+/* ========================================================================= */
+.cati-campo-pendente {
+  outline: 2.5px solid #E53935 !important;
+  outline-offset: 1px !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 6px rgba(229, 57, 53, 0.45) !important;
+  transition: outline 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+div.fieldContent.cati-campo-pendente,
+table.typeAheadContainer.cati-campo-pendente {
+  outline: 2.5px solid #E53935 !important;
+  outline-offset: 1px !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 6px rgba(229, 57, 53, 0.45) !important;
+}
+
+/* ========================================================================= */
+/* 2. Lembrete de Base de Conhecimento (Estilo 1N)                           */
+/* ========================================================================= */
+#cati-notificacao-sem-base,
+.cati-lembrete-sem-base {
+  background-color: #ffcdcd !important;
+  border: 1px solid #ff0707 !important;
+  border-radius: 6px !important;
+  color: #850404 !important;
+  padding: 10px 14px !important;
+  margin: 10px !important;
+  text-align: center !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  box-shadow: 0 2px 8px rgba(255, 7, 7, 0.25) !important;
+  animation: cati-lembrete-pulse 2s infinite ease-in-out !important;
+  z-index: 9999 !important;
+  user-select: none !important;
+}
+
+@keyframes cati-lembrete-pulse {
+  0%, 100% {
+    border-color: #ff0707;
+    box-shadow: 0 2px 8px rgba(255, 7, 7, 0.25);
+  }
+  50% {
+    border-color: #b91c1c;
+    box-shadow: 0 2px 14px rgba(185, 28, 28, 0.45);
+  }
+}
+
+/* ========================================================================= */
+/* 3. Alerta de Usuário VIP na Lista Geral de Chamados                       */
+/* ========================================================================= */
+#cati-vip-banner-lista {
+  position: fixed;
+  top: 70px;
+  right: 24px;
+  z-index: 999999;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #dc2626;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.45);
+  animation: cati-vip-blink 1.2s infinite ease-in-out;
+  user-select: none;
+}
+
+@keyframes cati-vip-blink {
+  0% {
+    background-color: #8B0000;
+    box-shadow: 0 2px 8px rgba(139, 0, 0, 0.4);
+  }
+  50% {
+    background-color: #ff4444;
+    box-shadow: 0 4px 16px rgba(255, 68, 68, 0.6);
+  }
+  100% {
+    background-color: #8B0000;
+    box-shadow: 0 2px 8px rgba(139, 0, 0, 0.4);
+  }
+}
+
+.cati-vip-badge-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.cati-vip-badge-text {
+  letter-spacing: -0.2px;
+}
+
+/* ========================================================================= */
+/* 4. Botão Copiar Ficha do Chamado (Flutuante acima da caixa de SLA)       */
+/* ========================================================================= */
+#cati-btn-copiar-ficha {
+  position: fixed;
+  left: 68px;
+  bottom: 70px;
+  z-index: 999998;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #2563eb;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 7px 14px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  user-select: none;
+  line-height: 1.25;
+}
+
+#cati-btn-copiar-ficha:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+#cati-btn-copiar-ficha:active {
+  transform: translateY(0);
+}
+
+#cati-btn-copiar-ficha.copiado {
+  background-color: #10b981 !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* ========================================================================= */
+/* 5. Menu Hambúrguer / Toggle Flutuante dos Botões da Extensão (Pablo)      */
+/* ========================================================================= */
+#cati-assyst-menu-toggle {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 999999;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  background: #1e293b;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#cati-assyst-menu-toggle:hover {
+  background: #0f172a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.38);
+}
+
+#cati-assyst-menu-toggle:active {
+  transform: translateY(0);
+}
+
+#cati-assyst-menu-toggle .cati-menu-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+#cati-assyst-menu-toggle .cati-menu-label {
+  display: none;
+  font-size: 11.5px;
+  letter-spacing: 0.3px;
+}
+
+#cati-assyst-menu-toggle .cati-menu-dot {
+  display: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+
+#cati-assyst-menu-toggle .cati-menu-dot.dot-ok {
+  display: inline-block;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+#cati-assyst-menu-toggle .cati-menu-dot.dot-violated {
+  display: inline-block;
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+}
+
+#cati-assyst-menu-toggle .cati-menu-dot.dot-paused {
+  display: inline-block;
+  background: #f59e0b;
+}
+
+#cati-assyst-menu-toggle .cati-menu-dot.dot-running {
+  display: inline-block;
+  background: #3b82f6;
+}
+
+/* Modo Minimizado: Recolhe os botões flutuantes em uma pílula compacta */
+body.cati-buttons-minimized #cati-sla-floating-trigger,
+body.cati-buttons-minimized #cati-btn-copiar-ficha,
+body.cati-buttons-minimized #cati-floating-trigger,
+body.cati-buttons-minimized #cati-floating-trigger-waiting-info {
+  display: none !important;
+}
+
+body.cati-buttons-minimized #cati-assyst-menu-toggle {
+  width: auto;
+  border-radius: 17px;
+  padding: 0 12px;
+  height: 34px;
+  background: #334155;
+  opacity: 0.92;
+}
+
+body.cati-buttons-minimized #cati-assyst-menu-toggle:hover {
+  opacity: 1;
+  background: #1e293b;
+}
+
+body.cati-buttons-minimized #cati-assyst-menu-toggle .cati-menu-label {
+  display: inline-block;
+}
+

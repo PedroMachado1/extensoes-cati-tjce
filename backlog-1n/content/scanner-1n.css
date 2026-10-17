@@ -1,0 +1,362 @@
+/* ==========================================================================
+   Backlog 1N CATI — Estilos do Scanner Aguardando Info (7+ Dias)
+   ========================================================================== */
+
+#cati-1n-trigger-waiting-info {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 220px;
+  height: 38px;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #e65100, #f57c00);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(230, 81, 0, 0.35);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 99999;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+#cati-1n-trigger-waiting-info:hover {
+  background: linear-gradient(135deg, #d84315, #e65100);
+  box-shadow: 0 6px 18px rgba(216, 67, 21, 0.45);
+  transform: translateY(-1px);
+}
+
+#cati-1n-trigger-waiting-info:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(216, 67, 21, 0.3);
+}
+
+.cati-1n-btn-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   Modal Overlay e Painel Centralizado
+   ========================================================================== */
+
+.cati-1n-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: cati1nFadeIn 0.2s ease-out;
+}
+
+.cati-1n-modal-panel {
+  background: #ffffff;
+  width: 92%;
+  max-width: 580px;
+  max-height: 85vh;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #1e293b;
+  animation: cati1nScaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cati1nFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cati1nScaleUp {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.cati-1n-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+}
+
+.cati-1n-modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cati-1n-modal-subtitle {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.cati-1n-btn-close {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: all 0.15s;
+}
+
+.cati-1n-btn-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* ==========================================================================
+   Banner Informativo e Barra de Ferramentas
+   ========================================================================== */
+
+.cati-1n-banner {
+  background: #fff7ed;
+  border-left: 4px solid #f97316;
+  color: #9a3412;
+  padding: 10px 16px;
+  margin: 12px 16px 0 16px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.cati-1n-toolbar {
+  padding: 10px 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ==========================================================================
+   Lista de Resultados e Cards
+   ========================================================================== */
+
+.cati-1n-list {
+  padding: 0 16px 16px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.cati-1n-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.15s ease;
+}
+
+.cati-1n-card:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.cati-1n-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.cati-1n-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cati-1n-ticket-num {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cati-1n-badge-overdue {
+  background: #ffedd5;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.cati-1n-date-time {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.cati-1n-btn-abrir {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.cati-1n-btn-abrir:hover {
+  background: #1d4ed8;
+}
+
+/* ==========================================================================
+   Estado Vazio, Progresso e Rodapé
+   ========================================================================== */
+
+.cati-1n-empty {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.cati-1n-progress-body {
+  padding: 36px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.cati-1n-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #f97316;
+  border-radius: 50%;
+  animation: cati1nSpin 0.8s linear infinite;
+  margin-bottom: 14px;
+}
+
+@keyframes cati1nSpin {
+  to { transform: rotate(360deg); }
+}
+
+.cati-1n-progress-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.cati-1n-progress-detail {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 14px;
+}
+
+.cati-1n-volume-alert {
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cati-1n-progress-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.cati-1n-progress-bar-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #f97316, #ea580c);
+  transition: width 0.15s ease-out;
+}
+
+.cati-1n-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+}
+
+.cati-1n-btn-secondary {
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cati-1n-btn-secondary:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* ==========================================================================
+   Notificações Toast
+   ========================================================================== */
+
+.cati-1n-toast {
+  position: fixed;
+  bottom: 74px;
+  right: 24px;
+  background: #1e293b;
+  color: #ffffff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  z-index: 100001;
+  animation: cati1nFadeIn 0.2s ease-out;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.cati-1n-toast-fadeout {
+  opacity: 0;
+  transform: translateY(6px);
+}

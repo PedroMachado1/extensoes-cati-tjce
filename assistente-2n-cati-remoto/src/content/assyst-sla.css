@@ -1,0 +1,338 @@
+/* Estilos da Calculadora de SLA - Assistente 2N CATI Remoto */
+
+/* Caixa Flutuante do SLA (Extremidade Esquerda, na mesma linha inferior do botão de agendados) */
+#cati-sla-floating-trigger {
+  --sla-scale: 1;
+  position: fixed;
+  bottom: 24px;
+  left: 68px;
+  z-index: 999998;
+  display: inline-flex;
+  align-items: center;
+  gap: calc(7px * var(--sla-scale));
+  padding: calc(9px * var(--sla-scale)) calc(14px * var(--sla-scale));
+  border-radius: calc(21px * var(--sla-scale));
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: calc(11.5px * var(--sla-scale));
+  line-height: 1.25;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+  transition: all 0.2s ease;
+  user-select: none;
+  background: #ffffff;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+#cati-sla-floating-trigger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.32);
+}
+
+/* Status: Neutro / Ocioso */
+#cati-sla-floating-trigger.status-idle {
+  background: #ffffff;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+/* Status: Carregando */
+#cati-sla-floating-trigger.status-loading {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+/* Status: Dentro do Prazo (Verde) */
+#cati-sla-floating-trigger.status-ok {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #a7f3d0;
+}
+
+/* Status: Violado (Vermelho) */
+#cati-sla-floating-trigger.status-violated {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+  animation: cati-sla-pulse 2s infinite ease-in-out;
+}
+
+/* Status: Em andamento / Correndo (Azul) */
+#cati-sla-floating-trigger.status-running {
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+
+/* Status: Pausado (Laranja/Âmbar) */
+#cati-sla-floating-trigger.status-paused {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+@keyframes cati-sla-pulse {
+  0%, 100% { border-color: #fecaca; }
+  50% { border-color: #ef4444; }
+}
+
+.cati-sla-fl-icon {
+  font-size: calc(13px * var(--sla-scale));
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  user-select: none;
+}
+
+.cati-sla-fl-icon:hover {
+  transform: scale(1.25);
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.4));
+}
+
+.cati-sla-fl-text {
+  letter-spacing: -0.2px;
+}
+
+.cati-sla-fl-refresh {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: calc(4px * var(--sla-scale));
+  font-size: calc(12px * var(--sla-scale));
+  opacity: 0.75;
+  transition: opacity 0.15s, transform 0.25s;
+}
+
+.cati-sla-fl-refresh:hover {
+  opacity: 1;
+  transform: rotate(90deg);
+}
+
+/* Popover do Botão Flutuante (abre para cima, alinhado à esquerda) */
+.cati-sla-fl-popover {
+  position: absolute;
+  bottom: calc(100% + calc(11px * var(--sla-scale)));
+  left: 0;
+  right: auto;
+  width: calc(320px * var(--sla-scale));
+  max-width: calc(100vw - 48px);
+  background: #1e293b;
+  color: #f8fafc;
+  border-radius: calc(9px * var(--sla-scale));
+  padding: calc(12px * var(--sla-scale));
+  font-size: calc(11px * var(--sla-scale));
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.4);
+  z-index: 9999999;
+  line-height: 1.38;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(5px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+  pointer-events: none;
+}
+
+#cati-sla-floating-trigger:hover .cati-sla-fl-popover,
+#cati-sla-floating-trigger.is-pinned .cati-sla-fl-popover {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+#cati-sla-floating-trigger.is-pinned {
+  box-shadow: 0 0 0 2px #38bdf8, 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.pop-title {
+  font-weight: 700;
+  font-size: calc(11.5px * var(--sla-scale));
+  color: #ffffff;
+  border-bottom: 1px solid #334155;
+  padding-bottom: calc(5px * var(--sla-scale));
+  margin-bottom: calc(6px * var(--sla-scale));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pop-badge {
+  font-size: calc(10px * var(--sla-scale));
+  padding: calc(2px * var(--sla-scale)) calc(7px * var(--sla-scale));
+  border-radius: calc(9px * var(--sla-scale));
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.pop-badge.status-ok { background: #065f46; color: #34d399; }
+.pop-badge.status-violated { background: #991b1b; color: #fca5a5; }
+.pop-badge.status-running { background: #1e40af; color: #93c5fd; }
+.pop-badge.status-paused { background: #78350f; color: #fde68a; }
+
+.pop-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: calc(5px * var(--sla-scale));
+  gap: calc(10px * var(--sla-scale));
+}
+
+.pop-row:last-child {
+  margin-bottom: 0;
+}
+
+.pop-lbl {
+  color: #94a3b8;
+}
+
+.pop-val {
+  font-weight: 600;
+  color: #f1f5f9;
+  text-align: right;
+}
+
+.pop-val.val-ok { color: #34d399; }
+.pop-val.val-violated { color: #f87171; }
+.pop-val.val-paused { color: #fbbf24; }
+
+.pop-pauses-list {
+  margin-top: calc(7px * var(--sla-scale));
+  padding-top: calc(5px * var(--sla-scale));
+  border-top: 1px dashed #334155;
+  font-size: calc(10px * var(--sla-scale));
+  color: #94a3b8;
+}
+
+.pop-pauses-title {
+  font-weight: 600;
+  margin-bottom: calc(3px * var(--sla-scale));
+  color: #cbd5e1;
+  font-size: calc(10px * var(--sla-scale));
+}
+
+.pop-pause-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: calc(2.5px * var(--sla-scale));
+  font-size: calc(9.5px * var(--sla-scale));
+  color: #94a3b8;
+}
+
+.pop-pause-min {
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.pop-timeline-item {
+  font-size: calc(9px * var(--sla-scale));
+  color: #94a3b8;
+  margin-bottom: calc(2px * var(--sla-scale));
+  line-height: 1.25;
+}
+
+/* Regime de Trabalho Box */
+.pop-mode-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: calc(6px * var(--sla-scale));
+  padding: calc(6px * var(--sla-scale)) calc(8px * var(--sla-scale));
+  margin-bottom: calc(7px * var(--sla-scale));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pop-mode-lbl {
+  font-size: calc(9px * var(--sla-scale));
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.pop-mode-val {
+  font-size: calc(10.5px * var(--sla-scale));
+  font-weight: 700;
+}
+
+.btn-toggle-sla-mode {
+  background: #334155;
+  border: 1px solid #475569;
+  color: #f8fafc;
+  font-size: calc(9.5px * var(--sla-scale));
+  padding: calc(3px * var(--sla-scale)) calc(7px * var(--sla-scale));
+  border-radius: calc(4px * var(--sla-scale));
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-toggle-sla-mode:hover {
+  background: #475569;
+  border-color: #64748b;
+}
+
+.pop-row-alert-warning {
+  background: rgba(234, 179, 8, 0.15);
+  padding: calc(4px * var(--sla-scale)) calc(6px * var(--sla-scale));
+  border-radius: calc(4px * var(--sla-scale));
+  margin-bottom: calc(6px * var(--sla-scale));
+}
+
+.pop-row-alert-danger {
+  background: rgba(239, 68, 68, 0.12);
+  padding: calc(4px * var(--sla-scale)) calc(6px * var(--sla-scale));
+  border-radius: calc(4px * var(--sla-scale));
+  margin-bottom: calc(6px * var(--sla-scale));
+}
+
+.pop-row-ans {
+  background: rgba(255, 255, 255, 0.04);
+  padding: calc(2px * var(--sla-scale)) calc(4px * var(--sla-scale));
+  border-radius: calc(4px * var(--sla-scale));
+}
+
+.pop-scale-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: calc(8px * var(--sla-scale));
+  padding-top: calc(6px * var(--sla-scale));
+  border-top: 1px solid #334155;
+  font-size: calc(10px * var(--sla-scale));
+  color: #94a3b8;
+}
+
+.pop-scale-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(5px * var(--sla-scale));
+}
+
+.pop-scale-btn {
+  background: #334155;
+  border: 1px solid #475569;
+  color: #f1f5f9;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 1px 7px;
+  font-size: calc(10.5px * var(--sla-scale));
+  font-weight: 700;
+  line-height: 1.2;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.pop-scale-btn:hover {
+  background: #475569;
+  border-color: #64748b;
+}
+
+.pop-scale-val {
+  font-weight: 600;
+  color: #cbd5e1;
+}

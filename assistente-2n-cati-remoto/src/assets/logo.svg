@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Assistente - 2N CATI Remoto">
+  <rect x="6" y="6" width="116" height="116" rx="28" fill="#153047"/>
+  <rect x="25" y="29" width="78" height="76" rx="16" fill="#f8fafc"/>
+  <path d="M25 45c0-8.84 7.16-16 16-16h46c8.84 0 16 7.16 16 16v9H25v-9Z" fill="#20a58f"/>
+  <path d="M43 22v17M85 22v17" stroke="#f8fafc" stroke-width="8" stroke-linecap="round"/>
+  <path d="M42 68h18M42 83h11" stroke="#91a1ae" stroke-width="7" stroke-linecap="round"/>
+  <path d="m63 82 10 10 20-25" fill="none" stroke="#2358d5" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="104" cy="27" r="10" fill="#d44254" stroke="#153047" stroke-width="5"/>
+</svg>
