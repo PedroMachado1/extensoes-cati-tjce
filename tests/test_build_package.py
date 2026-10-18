@@ -2,6 +2,7 @@ import unittest
 import os
 import zipfile
 import json
+import subprocess
 
 class TestBuildPackage(unittest.TestCase):
     def setUp(self):
@@ -25,7 +26,7 @@ class TestBuildPackage(unittest.TestCase):
             manifest = json.loads(manifest_raw)
             with open(os.path.join(self.ext_dir, "manifest.json"), "r", encoding="utf-8") as f:
                 source_manifest = json.load(f)
-            self.assertEqual(source_manifest.get("version"), "3.1.0", "Versão deve ser 3.1.0")
+            self.assertEqual(source_manifest.get("version"), "3.2.0", "Versão deve ser 3.2.0")
             self.assertEqual(manifest.get("version"), source_manifest.get("version"))
 
     def test_source_zip_package_integrity(self):
@@ -50,6 +51,23 @@ class TestBuildPackage(unittest.TestCase):
         self.assertIsNotNone(cati_script, "Content script para cati.tjce.jus.br não encontrado")
         self.assertIn("src/content/assyst-downtime.js", cati_script.get("js", []))
         self.assertIn("src/content/assyst-downtime.css", cati_script.get("css", []))
+
+    def test_popup_js_syntax_validity(self):
+        """Valida que src/popup/popup.js possui sintaxe ECMAScript/ES Module 100% válida (sem erros de parsing ou await fora de async)"""
+        popup_js_path = os.path.join(self.ext_dir, "src", "popup", "popup.js")
+        proc = subprocess.run([
+            "node",
+            "--experimental-vm-modules",
+            "-e",
+            """
+            const fs = require('fs');
+            const vm = require('vm');
+            const code = fs.readFileSync(process.argv[1], 'utf8');
+            new vm.SourceTextModule(code);
+            """,
+            popup_js_path
+        ], capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, f"Erro de sintaxe no popup.js:\n{proc.stderr}")
 
 if __name__ == "__main__":
     unittest.main()
