@@ -40,19 +40,31 @@ async function carregarQuedasAssyst() {
       totalMs += Math.max(0, dMs);
     });
 
+    const ativo = data?.cati_downtime_active && data.cati_downtime_active.status === 'ativo' ? data.cati_downtime_active : null;
     const totalMinutos = Math.floor(totalMs / 60000);
-    summaryEl.textContent = `Hoje: ${quedasHoje.length} ${quedasHoje.length === 1 ? 'queda' : 'quedas'} • Total: ${totalMinutos} min`;
+    if (ativo) {
+      summaryEl.innerHTML = `<span style="color:#ef4444;font-weight:700;">🚨 Queda em Andamento</span> • Total hoje: ${totalMinutos} min`;
+    } else {
+      summaryEl.textContent = `Hoje: ${quedasHoje.length} ${quedasHoje.length === 1 ? 'queda' : 'quedas'} • Total: ${totalMinutos} min`;
+    }
 
     if (listEl) {
+      const itensHtml = [];
+      if (ativo) {
+        itensHtml.push(`<div style="padding: 3px 0; color: #ef4444; font-weight: 600;">⚠️ Em aberto desde ${ativo.horaInicio || '--:--:--'} — ${ativo.motivo || 'Instabilidade'}</div>`);
+      }
       if (quedasHoje.length > 0) {
-        listEl.classList.remove('hidden');
-        listEl.innerHTML = quedasHoje.map((q, idx) => {
+        quedasHoje.forEach((q, idx) => {
           const ini = q.horaInicio || '--:--:--';
           const fim = q.horaFim || '--:--:--';
           const dur = q.duracao || q.duracaoFormatada || '0s';
           const mot = q.motivo || 'Instabilidade';
-          return `<div style="padding: 2px 0;">• Queda ${idx + 1}: ${ini} às ${fim} (${dur}) — ${mot}</div>`;
-        }).join('');
+          itensHtml.push(`<div style="padding: 2px 0;">• Queda ${idx + 1}: ${ini} às ${fim} (${dur}) — ${mot}</div>`);
+        });
+      }
+      if (itensHtml.length > 0) {
+        listEl.classList.remove('hidden');
+        listEl.innerHTML = itensHtml.join('');
       } else {
         listEl.classList.add('hidden');
         listEl.innerHTML = '';

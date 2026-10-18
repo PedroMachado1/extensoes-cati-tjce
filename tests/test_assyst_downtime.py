@@ -61,6 +61,15 @@ class TestAssystDowntime(unittest.TestCase):
               contains: function(c) { return this._classes.has(c); }
             },
             style: {},
+            attributes: {},
+            setAttribute: function(name, val) {
+              this.attributes[name] = String(val);
+              if (name === 'id') this.id = String(val);
+              if (name === 'class') this.className = String(val);
+            },
+            getAttribute: function(name) {
+              return this.attributes[name] !== undefined ? this.attributes[name] : null;
+            },
             innerText: '',
             textContent: '',
             children: [],
@@ -115,6 +124,17 @@ class TestAssystDowntime(unittest.TestCase):
           if (sel.startsWith('.')) {
             const cls = sel.slice(1);
             return el.className && el.className.split(/\\s+/).includes(cls);
+          }
+          if (sel.includes('[') && sel.endsWith(']')) {
+            const m = sel.match(/^([a-zA-Z0-9_-]*)\\[([a-zA-Z0-9_-]+)(?:=[\"']?([^\"'\\]]+)[\"']?)?\\]$/);
+            if (m) {
+              const tag = m[1];
+              const attr = m[2];
+              const val = m[3];
+              if (tag && el.tagName !== tag.toUpperCase()) return false;
+              if (val !== undefined) return el.getAttribute(attr) === val;
+              return el.getAttribute(attr) !== null;
+            }
           }
           return el.tagName === sel.toUpperCase();
         }
@@ -961,5 +981,125 @@ class TestAssystDowntime(unittest.TestCase):
         self.assertIn("btn-export-downtime-report", js, "popup.js deve referenciar btn-export-downtime-report")
         self.assertIn("cati_downtime_history", js, "popup.js deve consultar cati_downtime_history no storage")
 
+    def test_detectar_queda_com_elementos_dom_especificos_assyst(self):
+        """Detecta queda e identifica corretamente o motivo a partir dos seletores do Assyst (#errorbox, #logoutMessage, .axios-logout-error, validationerror)."""
+        snippet = f"""
+        {self.mock_dom_js()}
+        const doc1 = createMockDocument();
+        const aLogout = doc1.createElement("a");
+        aLogout.id = "logoutMessage";
+        aLogout.innerText = "Voltar à página principal do assyst.";
+        doc1.body.appendChild(aLogout);
+
+        const bq1 = doc1.createElement("blockquote");
+        bq1.id = "errorbox";
+        const ol1 = doc1.createElement("ol");
+        ol1.id = "errorlist";
+        ol1.classList.add("axios-logout-error");
+        const li1 = doc1.createElement("li");
+        const aVal1 = doc1.createElement("a");
+        aVal1.setAttribute("name", "validationerror");
+        aVal1.innerText = "Sua sessão expirou.";
+        li1.appendChild(aVal1);
+        ol1.appendChild(li1);
+        bq1.appendChild(ol1);
+        doc1.body.appendChild(bq1);
+
+        const res1 = engine.detectarQuedaAssyst(
+            "https://cati.tjce.jus.br/assystweb/logout/logout.do",
+            doc1
+        );
+
+        // Caso 2: O mesmo DOM, mas o erro mudou para licenças esgotadas
+        const doc2 = createMockDocument();
+        const aLogout2 = doc2.createElement("a");
+        aLogout2.id = "logoutMessage";
+        aLogout2.innerText = "Voltar à página principal do assyst.";
+        doc2.body.appendChild(aLogout2);
+
+        const bq2 = doc2.createElement("blockquote");
+        bq2.id = "errorbox";
+        const ol2 = doc2.createElement("ol");
+        ol2.id = "errorlist";
+        ol2.classList.add("axios-logout-error");
+        const li2 = doc2.createElement("li");
+        const aVal2 = doc2.createElement("a");
+        aVal2.setAttribute("name", "validationerror");
+        aVal2.innerText = "Todas as licenças estão em uso. Tente novamente mais tarde.";
+        li2.appendChild(aVal2);
+        ol2.appendChild(li2);
+        bq2.appendChild(ol2);
+        doc2.body.appendChild(bq2);
+
+        const res2 = engine.detectarQuedaAssyst(
+            "https://cati.tjce.jus.br/assystweb/application.do",
+            doc2
+        );
+
+        process.stdout.write(JSON.stringify({{ res1, res2 }}));
+        """
+        data = self.run_node(snippet)
+        self.assertTrue(data["res1"]["caiu"])
+        self.assertEqual(data["res1"]["motivo"], "Sessão Expirada")
+        self.assertTrue(data["res2"]["caiu"])
+        self.assertEqual(data["res2"]["motivo"], "Falta de Licenças Disponíveis")
+
+    def test_detectar_restabelecimento_rejeita_errorbox_ou_logout_message(self):
+        """Garante que a presença de #errorbox ou #logoutMessage NUNCA seja considerada como restabelecimento."""
+        snippet = f"""
+        {self.mock_dom_js()}
+        const doc = createMockDocument();
+        const titleEl = doc.createElement("div");
+        titleEl.id = "contentPaneTitle";
+        doc.body.appendChild(titleEl);
+
+        const aLogout = doc.createElement("a");
+        aLogout.id = "logoutMessage";
+        aLogout.innerText = "Voltar à página principal do assyst.";
+        doc.body.appendChild(aLogout);
+
+        const bq = doc.createElement("blockquote");
+        bq.id = "errorbox";
+        doc.body.appendChild(bq);
+
+        const ok = engine.detectarRestabelecimento(
+            "https://cati.tjce.jus.br/assystweb/application.do#eventsearch",
+            doc
+        );
+        process.stdout.write(JSON.stringify({{ ok }}));
+        """
+        data = self.run_node(snippet)
+        self.assertFalse(data["ok"], "Não pode considerar restabelecido se errorbox ou logoutMessage estiverem no DOM")
+
+    def test_iniciar_incidente_atualiza_motivo_mantendo_inicio(self):
+        """Ao detectar transição de erro (ex: Sessão Expirada -> Falta de Licenças), preserva timestamp de início e atualiza motivo."""
+        snippet = """
+        const mockStore = {};
+        const mockStorageApi = {
+            get: (keys, cb) => cb(mockStore),
+            set: (items, cb) => { Object.assign(mockStore, items); cb && cb(); }
+        };
+
+        const t0 = 1700000000000;
+        const t1 = t0 + 120000; // 2 min depois
+
+        engine.iniciarIncidenteStorage("Sessão Expirada", new Date(t0), mockStorageApi).then(inc1 => {
+            return engine.iniciarIncidenteStorage("Falta de Licenças Disponíveis", new Date(t1), mockStorageApi).then(inc2 => {
+                process.stdout.write(JSON.stringify({
+                    inicio1: inc1.inicio,
+                    inicio2: inc2.inicio,
+                    motivo1: inc1.motivo,
+                    motivo2: inc2.motivo,
+                    storeAtivo: mockStore.cati_downtime_active
+                }));
+            });
+        });
+        """
+        data = self.run_node(snippet)
+        self.assertEqual(data["inicio1"], data["inicio2"], "Timestamp inicial não deve ser resetado")
+        self.assertEqual(data["motivo2"], "Falta de Licenças Disponíveis", "Motivo deve ser atualizado para o erro mais recente")
+        self.assertEqual(data["storeAtivo"]["motivo"], "Falta de Licenças Disponíveis")
+
 if __name__ == "__main__":
     unittest.main()
+

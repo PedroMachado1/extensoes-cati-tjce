@@ -30,31 +30,96 @@ const CatiDowntimeEngine = (() => {
   }
 
   /**
-   * Detecta se o Assyst está fora do ar com base na URL e conteúdo do DOM.
+   * Detecta se o Assyst está fora do ar com base na URL e conteúdo do DOM/texto.
    * @param {string} url - URL atual
-   * @param {string} domText - Texto ou innerText do DOM
+   * @param {string|object} domOrText - Objeto DOM com querySelector ou string com texto/HTML
    * @returns {{ caiu: boolean, motivo: string | null }}
    */
-  function detectarQuedaAssyst(url, domText) {
+  function detectarQuedaAssyst(url, domOrText) {
     const u = String(url || '');
-    const t = String(domText || '');
+    let t = '';
+    let dom = null;
 
-    // 1. Rota de logout com sessionInvalid=true
-    if (u.includes('/logout/logout.do') && u.includes('sessionInvalid=true')) {
-      return { caiu: true, motivo: 'Sessão Expirada / Queda de Acesso' };
+    if (typeof domOrText === 'string') {
+      t = domOrText;
+    } else if (domOrText && typeof domOrText === 'object') {
+      dom = domOrText;
+      if (dom.body && typeof dom.body.innerText === 'string') {
+        t = dom.body.innerText;
+      } else if (typeof dom.innerText === 'string') {
+        t = dom.innerText;
+      } else if (typeof dom.textContent === 'string') {
+        t = dom.textContent;
+      }
     }
 
-    // 2. Frase literal de sessão expirada
-    if (t.includes('Sua sessão expirou.')) {
-      return { caiu: true, motivo: 'Sessão Expirada' };
+    const tLower = t.toLowerCase();
+
+    // 1. Elementos estruturais e seletores específicos do Assyst para erro e logout
+    let hasErrorBox = false;
+    let hasErrorList = false;
+    let hasLogoutMessage = false;
+    let validationErrorText = '';
+
+    if (dom && typeof dom.querySelector === 'function') {
+      const errBox = (typeof dom.getElementById === 'function' ? dom.getElementById('errorbox') : null) || dom.querySelector('#errorbox');
+      const errList = (typeof dom.getElementById === 'function' ? dom.getElementById('errorlist') : null) || dom.querySelector('#errorlist') || dom.querySelector('.axios-logout-error');
+      const logoutLink = (typeof dom.getElementById === 'function' ? dom.getElementById('logoutMessage') : null) || dom.querySelector('#logoutMessage');
+      const validationErr = dom.querySelector('a[name="validationerror"]') || dom.querySelector('[name="validationerror"]') || dom.querySelector('#errorlist li');
+
+      hasErrorBox = Boolean(errBox);
+      hasErrorList = Boolean(errList);
+      hasLogoutMessage = Boolean(logoutLink);
+      if (validationErr) {
+        validationErrorText = String(validationErr.innerText || validationErr.textContent || '').trim();
+      }
+    } else {
+      if (t.includes('id="errorbox"') || t.includes("id='errorbox'")) hasErrorBox = true;
+      if (t.includes('id="errorlist"') || t.includes("id='errorlist'") || t.includes('axios-logout-error')) hasErrorList = true;
+      if (t.includes('id="logoutMessage"') || t.includes("id='logoutMessage'")) hasLogoutMessage = true;
     }
 
-    // 3. Frase literal de esgotamento de licenças
-    if (t.includes('Todas as licenças estão em uso')) {
+    // 2. Falta de licenças (prioridade máxima caso apareça no texto ou no box de erro)
+    const valLower = validationErrorText.toLowerCase();
+    const hasLicencaText = tLower.includes('licença') || tLower.includes('licenca') || valLower.includes('licen');
+    if (hasLicencaText && (hasErrorBox || hasErrorList || hasLogoutMessage || tLower.includes('uso') || tLower.includes('esgotad') || tLower.includes('limite') || tLower.includes('tente novamente') || valLower.includes('uso'))) {
       return { caiu: true, motivo: 'Falta de Licenças Disponíveis' };
     }
 
-    // 4. Status HTTP 500, 502, 503 ou 504
+    // 3. Sessão expirada
+    const hasSessaoExpiradaText = tLower.includes('sessão expirou') || tLower.includes('sessao expirou') || valLower.includes('expir');
+    if (hasSessaoExpiradaText) {
+      return { caiu: true, motivo: 'Sessão Expirada' };
+    }
+
+    // 4. Se encontrou elementos específicos de erro ou logout do Assyst
+    if (hasErrorBox || hasErrorList || hasLogoutMessage) {
+      if (validationErrorText) {
+        if (/licen/i.test(validationErrorText)) return { caiu: true, motivo: 'Falta de Licenças Disponíveis' };
+        if (/expir/i.test(validationErrorText)) return { caiu: true, motivo: 'Sessão Expirada' };
+        return { caiu: true, motivo: `Instabilidade do Sistema (${validationErrorText})` };
+      }
+      if (hasLogoutMessage || tLower.includes('você saiu do aplicativo') || tLower.includes('voce saiu do aplicativo')) {
+        return { caiu: true, motivo: 'Sessão Expirada / Queda de Acesso' };
+      }
+      return { caiu: true, motivo: 'Instabilidade do Sistema' };
+    }
+
+    // 5. Frases literais tradicionais
+    if (t.includes('Todas as licenças estão em uso') || t.includes('Todas as licencas estao em uso')) {
+      return { caiu: true, motivo: 'Falta de Licenças Disponíveis' };
+    }
+
+    if (t.includes('Sua sessão expirou') || t.includes('Sua sessao expirou')) {
+      return { caiu: true, motivo: 'Sessão Expirada' };
+    }
+
+    // 6. Rota de logout com sessionInvalid=true ou logoutMessage
+    if (u.includes('/logout/logout.do') && (u.includes('sessionInvalid=true') || u.includes('logoutMessage'))) {
+      return { caiu: true, motivo: 'Sessão Expirada / Queda de Acesso' };
+    }
+
+    // 7. Status HTTP 500, 502, 503 ou 504
     if (/\b(500|502|503|504)\b/.test(t)) {
       const hasErrorKeywords = /error|erro|gateway|service|server|servidor|unavailable|indispon|timeout|tempo/i.test(t);
       const isShortErrorPage = t.trim().length < 250;
@@ -78,6 +143,18 @@ const CatiDowntimeEngine = (() => {
     if (!u.includes('application.do')) return false;
     if (u.includes('logout.do') || u.includes('sessionInvalid=true')) return false;
 
+    // Se o DOM contiver QUALQUER elemento de erro ou logout do Assyst, NUNCA está restabelecido!
+    if (dom && typeof dom.querySelector === 'function') {
+      const errBox = (typeof dom.getElementById === 'function' ? dom.getElementById('errorbox') : null) || dom.querySelector('#errorbox');
+      const errList = (typeof dom.getElementById === 'function' ? dom.getElementById('errorlist') : null) || dom.querySelector('#errorlist') || dom.querySelector('.axios-logout-error');
+      const logoutLink = (typeof dom.getElementById === 'function' ? dom.getElementById('logoutMessage') : null) || dom.querySelector('#logoutMessage');
+      const validationErr = dom.querySelector('a[name="validationerror"]') || dom.querySelector('[name="validationerror"]');
+
+      if (errBox || errList || logoutLink || validationErr) {
+        return false;
+      }
+    }
+
     // Extrair texto do DOM para verificar mensagens residuais de erro
     let text = '';
     if (typeof dom === 'string') {
@@ -92,7 +169,11 @@ const CatiDowntimeEngine = (() => {
       }
     }
 
-    if (text.includes('Sua sessão expirou.') || text.includes('Todas as licenças estão em uso')) {
+    const textLower = text.toLowerCase();
+    if (textLower.includes('sua sessão expirou') || textLower.includes('sua sessao expirou') ||
+        textLower.includes('licenças estão em uso') || textLower.includes('licencas estao em uso') ||
+        textLower.includes('você saiu do aplicativo') || textLower.includes('voce saiu do aplicativo') ||
+        textLower.includes('voltar à página principal do assyst') || textLower.includes('voltar a pagina principal do assyst')) {
       return false;
     }
 
@@ -358,7 +439,12 @@ const CatiDowntimeEngine = (() => {
   async function iniciarIncidenteStorage(motivo, agora, storageApi) {
     const data = await storageGet(storageApi, ['cati_downtime_active']);
     if (data && data.cati_downtime_active && data.cati_downtime_active.status === 'ativo') {
-      return data.cati_downtime_active;
+      const ativo = data.cati_downtime_active;
+      if (motivo && motivo !== ativo.motivo && motivo !== 'Instabilidade do Sistema') {
+        ativo.motivo = motivo;
+        await storageSet(storageApi, { cati_downtime_active: ativo });
+      }
+      return ativo;
     }
 
     const dateObj = agora instanceof Date ? agora : (agora ? new Date(agora) : new Date());
@@ -654,15 +740,24 @@ const CatiDowntimeEngine = (() => {
     if (!d || !w) return { status: 'indeterminado' };
 
     const url = (w.location && w.location.href) ? w.location.href : '';
-    let domText = '';
-    if (d.body) {
-      domText = d.body.innerText || d.body.textContent || '';
-    }
 
-    const queda = detectarQuedaAssyst(url, domText);
+    const queda = detectarQuedaAssyst(url, d);
     if (queda.caiu) {
       const inc = await iniciarIncidenteStorage(queda.motivo, new Date(), storageApi);
       renderizarBannerQuedaAtiva(inc, d);
+
+      const logoutLink = (typeof d.getElementById === 'function' ? d.getElementById('logoutMessage') : null) || (d.querySelector ? d.querySelector('#logoutMessage') : null);
+      if (logoutLink && !logoutLink.dataset?.catiObserved) {
+        if (logoutLink.dataset) logoutLink.dataset.catiObserved = 'true';
+        logoutLink.addEventListener('click', () => {
+          [300, 1000, 2500, 5000].forEach(delay => {
+            setTimeout(() => {
+              iniciarCicloDowntime(d, w, storageApi);
+            }, delay);
+          });
+        });
+      }
+
       return { status: 'queda_ativa', inc };
     }
 
@@ -681,6 +776,55 @@ const CatiDowntimeEngine = (() => {
     return { status: 'indeterminado' };
   }
 
+  let downtimeObserver = null;
+  let downtimePollInterval = null;
+
+  /**
+   * Inicializa o monitoramento contínuo via MutationObserver, listeners e polling.
+   * @param {Document} [doc]
+   * @param {Window} [win]
+   * @param {object} [storageApi]
+   */
+  function iniciarMonitoramentoContinuo(doc, win, storageApi) {
+    const d = doc || (typeof document !== 'undefined' ? document : null);
+    const w = win || (typeof window !== 'undefined' ? window : null);
+    if (!d || !w) return;
+
+    iniciarCicloDowntime(d, w, storageApi);
+
+    // 1. Observer para reagir a alterações assíncronas do DOM (Dojo/Ajax)
+    if (typeof MutationObserver !== 'undefined' && d.body && !downtimeObserver) {
+      let debounceTimer = null;
+      try {
+        downtimeObserver = new MutationObserver(() => {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            iniciarCicloDowntime(d, w, storageApi);
+          }, 350);
+        });
+        downtimeObserver.observe(d.body, { childList: true, subtree: true, characterData: true });
+      } catch (e) {
+        // Ignora caso observe não seja suportado no mock de testes
+      }
+    }
+
+    // 2. Polling leve regular (a cada 2 segundos)
+    if (!downtimePollInterval && typeof setInterval !== 'undefined') {
+      downtimePollInterval = setInterval(() => {
+        iniciarCicloDowntime(d, w, storageApi);
+      }, 2000);
+      if (downtimePollInterval && typeof downtimePollInterval.unref === 'function') {
+        downtimePollInterval.unref();
+      }
+    }
+
+    // 3. Ouvintes de navegação SPA / hashchange
+    if (w.addEventListener) {
+      w.addEventListener('hashchange', () => iniciarCicloDowntime(d, w, storageApi));
+      w.addEventListener('popstate', () => iniciarCicloDowntime(d, w, storageApi));
+    }
+  }
+
   return {
     ENGINE_VERSION,
     formatarDataBR,
@@ -696,7 +840,8 @@ const CatiDowntimeEngine = (() => {
     renderizarBannerQuedaAtiva,
     removerBannerQueda,
     renderizarModalRestabelecimento,
-    iniciarCicloDowntime
+    iniciarCicloDowntime,
+    iniciarMonitoramentoContinuo
   };
 })();
 
@@ -706,10 +851,10 @@ if (typeof window !== 'undefined') {
   if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
-        CatiDowntimeEngine.iniciarCicloDowntime(document, window);
+        CatiDowntimeEngine.iniciarMonitoramentoContinuo(document, window);
       });
     } else {
-      CatiDowntimeEngine.iniciarCicloDowntime(document, window);
+      CatiDowntimeEngine.iniciarMonitoramentoContinuo(document, window);
     }
   }
 }
