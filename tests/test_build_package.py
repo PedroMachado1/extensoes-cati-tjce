@@ -26,7 +26,7 @@ class TestBuildPackage(unittest.TestCase):
             manifest = json.loads(manifest_raw)
             with open(os.path.join(self.ext_dir, "manifest.json"), "r", encoding="utf-8") as f:
                 source_manifest = json.load(f)
-            self.assertEqual(source_manifest.get("version"), "3.2.1", "Versão deve ser 3.2.1")
+            self.assertEqual(source_manifest.get("version"), "3.2.2", "Versão deve ser 3.2.2")
             self.assertEqual(manifest.get("version"), source_manifest.get("version"))
 
     def test_source_zip_package_integrity(self):

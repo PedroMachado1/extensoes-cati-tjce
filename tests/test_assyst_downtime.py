@@ -1100,6 +1100,70 @@ class TestAssystDowntime(unittest.TestCase):
         self.assertEqual(data["motivo2"], "Falta de Licenças Disponíveis", "Motivo deve ser atualizado para o erro mais recente")
         self.assertEqual(data["storeAtivo"]["motivo"], "Falta de Licenças Disponíveis")
 
+    def test_detectar_queda_ignora_texto_de_chamados_na_grade_autenticada(self):
+        """Não detecta queda se o usuário estiver autenticado com a grade de chamados aberta, mesmo se um chamado contiver 'Sua sessão expirou' no texto."""
+        snippet = f"""
+        {self.mock_dom_js()}
+        const doc = createMockDocument();
+        const grid = doc.createElement("div");
+        grid.className = "dojoxGridMasterView";
+        doc.body.appendChild(grid);
+
+        const bannerUser = doc.createElement("div");
+        bannerUser.id = "banner_user_info";
+        bannerUser.innerText = "Usuário: Analista 2N CATI";
+        doc.body.appendChild(bannerUser);
+
+        // Texto do chamado na grade contendo a frase que causava o falso positivo
+        doc.body.innerText = "Chamado 2160544 - Usuário informa: Sua sessão expirou no sistema.";
+
+        const res = engine.detectarQuedaAssyst(
+            "https://cati.tjce.jus.br/assystweb/application.do#eventsearch",
+            doc
+        );
+        process.stdout.write(JSON.stringify(res));
+        """
+        data = self.run_node(snippet)
+        self.assertFalse(data["caiu"], "Grade de chamados autenticada não pode ser considerada como queda")
+        self.assertIsNone(data["motivo"])
+
+    def test_finalizar_incidente_descarta_incidentes_menores_que_5_segundos(self):
+        """Incidentes espúrios de duração inferior a 5 segundos (ex: 0 segundos de oscilação transitória) devem ser descartados sem gerar modal nem poluir histórico."""
+        snippet = """
+        const t0 = 1700000000000;
+        const mockStore = {
+            cati_downtime_active: {
+                id: "down_teste",
+                inicio: t0,
+                status: "ativo",
+                motivo: "Sessão Expirada"
+            },
+            cati_downtime_history: []
+        };
+        const mockStorageApi = {
+            get: (keys, cb) => cb(mockStore),
+            set: (items, cb) => { Object.assign(mockStore, items); cb && cb(); },
+            remove: (keys, cb) => {
+                const kList = Array.isArray(keys) ? keys : [keys];
+                kList.forEach(k => delete mockStore[k]);
+                cb && cb();
+            }
+        };
+
+        // Finaliza com apenas 500ms de diferença (0 segundos)
+        engine.finalizarIncidenteStorage(new Date(t0 + 500), mockStorageApi).then(incFinalizado => {
+            process.stdout.write(JSON.stringify({
+                retornado: incFinalizado,
+                activeApos: mockStore.cati_downtime_active,
+                historyLength: (mockStore.cati_downtime_history || []).length
+            }));
+        });
+        """
+        data = self.run_node(snippet)
+        self.assertIsNone(data["retornado"], "Incidente de 0 segundos deve retornar null ao finalizar")
+        self.assertIsNone(data["activeApos"], "cati_downtime_active deve ser limpo do storage")
+        self.assertEqual(data["historyLength"], 0, "Histórico não deve receber incidentes menores que 5s")
+
 if __name__ == "__main__":
     unittest.main()
 

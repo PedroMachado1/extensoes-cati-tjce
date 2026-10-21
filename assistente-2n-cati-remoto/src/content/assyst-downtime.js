@@ -30,6 +30,23 @@ const CatiDowntimeEngine = (() => {
   }
 
   /**
+   * Verifica se o usuário está autenticado na interface principal do Assyst.
+   * Se os containers de trabalho (grade Dojo, abas, título ou banner de usuário) estiverem presentes,
+   * o usuário está logado e textos contextuais da grade (ex: assunto de chamado) não são quedas.
+   * @param {object} dom
+   * @returns {boolean}
+   */
+  function isUsuarioAutenticado(dom) {
+    if (!dom || typeof dom.querySelector !== 'function') return false;
+    const authEl = dom.querySelector('#banner_user_info') ||
+                   dom.querySelector('.dojoxGridMasterView') ||
+                   dom.querySelector('#contentPaneTitle') ||
+                   dom.querySelector('.dijitTab') ||
+                   dom.querySelector('.assyst-main-view');
+    return Boolean(authEl);
+  }
+
+  /**
    * Detecta se o Assyst está fora do ar com base na URL e conteúdo do DOM/texto.
    * @param {string} url - URL atual
    * @param {string|object} domOrText - Objeto DOM com querySelector ou string com texto/HTML
@@ -55,7 +72,26 @@ const CatiDowntimeEngine = (() => {
 
     const tLower = t.toLowerCase();
 
-    // 1. Elementos estruturais e seletores específicos do Assyst para erro e logout
+    // 0. Se o usuário estiver na tela de trabalho autenticada (grade de chamados, banner de usuário, etc.),
+    // garantimos que assuntos ou detalhes de chamados na tela NUNCA sejam falsos positivos.
+    const autenticado = isUsuarioAutenticado(dom);
+
+    // 1. Erros HTTP 500, 502, 503 ou 504 no servidor (página de erro total)
+    if (/\b(500|502|503|504)\b/.test(t)) {
+      const hasErrorKeywords = /error|erro|gateway|service|server|servidor|unavailable|indispon|timeout|tempo/i.test(t);
+      const isShortErrorPage = t.trim().length < 350;
+      const isHttpHeader = /\bHTTP\b/i.test(t);
+      if ((hasErrorKeywords && !autenticado) || (isShortErrorPage && (hasErrorKeywords || isHttpHeader))) {
+        return { caiu: true, motivo: 'Instabilidade de Servidor / Rede' };
+      }
+    }
+
+    // Se o usuário está autenticado na área de trabalho ativa e não há erro HTTP fatal, NÃO está caído!
+    if (autenticado) {
+      return { caiu: false, motivo: null };
+    }
+
+    // 2. Elementos estruturais e seletores específicos do Assyst para erro e logout
     let hasErrorBox = false;
     let hasErrorList = false;
     let hasLogoutMessage = false;
@@ -67,32 +103,32 @@ const CatiDowntimeEngine = (() => {
       const logoutLink = (typeof dom.getElementById === 'function' ? dom.getElementById('logoutMessage') : null) || dom.querySelector('#logoutMessage');
       const validationErr = dom.querySelector('a[name="validationerror"]') || dom.querySelector('[name="validationerror"]') || dom.querySelector('#errorlist li');
 
-      hasErrorBox = Boolean(errBox);
-      hasErrorList = Boolean(errList);
       hasLogoutMessage = Boolean(logoutLink);
       if (validationErr) {
         validationErrorText = String(validationErr.innerText || validationErr.textContent || '').trim();
       }
+      hasErrorList = Boolean(errList) && (validationErrorText.length > 0 || (errList.innerText && errList.innerText.trim().length > 0));
+      hasErrorBox = Boolean(errBox) && (validationErrorText.length > 0 || hasErrorList);
     } else {
       if (t.includes('id="errorbox"') || t.includes("id='errorbox'")) hasErrorBox = true;
       if (t.includes('id="errorlist"') || t.includes("id='errorlist'") || t.includes('axios-logout-error')) hasErrorList = true;
       if (t.includes('id="logoutMessage"') || t.includes("id='logoutMessage'")) hasLogoutMessage = true;
     }
 
-    // 2. Falta de licenças (prioridade máxima caso apareça no texto ou no box de erro)
+    // 3. Falta de licenças (prioridade máxima caso apareça no texto ou no box de erro)
     const valLower = validationErrorText.toLowerCase();
     const hasLicencaText = tLower.includes('licença') || tLower.includes('licenca') || valLower.includes('licen');
     if (hasLicencaText && (hasErrorBox || hasErrorList || hasLogoutMessage || tLower.includes('uso') || tLower.includes('esgotad') || tLower.includes('limite') || tLower.includes('tente novamente') || valLower.includes('uso'))) {
       return { caiu: true, motivo: 'Falta de Licenças Disponíveis' };
     }
 
-    // 3. Sessão expirada
+    // 4. Sessão expirada
     const hasSessaoExpiradaText = tLower.includes('sessão expirou') || tLower.includes('sessao expirou') || valLower.includes('expir');
-    if (hasSessaoExpiradaText) {
+    if (hasSessaoExpiradaText && (hasLogoutMessage || hasErrorBox || hasErrorList || tLower.includes('sua sessão expirou') || tLower.includes('sua sessao expirou') || valLower.includes('expir'))) {
       return { caiu: true, motivo: 'Sessão Expirada' };
     }
 
-    // 4. Se encontrou elementos específicos de erro ou logout do Assyst
+    // 5. Se encontrou elementos específicos de erro ou logout do Assyst
     if (hasErrorBox || hasErrorList || hasLogoutMessage) {
       if (validationErrorText) {
         if (/licen/i.test(validationErrorText)) return { caiu: true, motivo: 'Falta de Licenças Disponíveis' };
@@ -105,7 +141,7 @@ const CatiDowntimeEngine = (() => {
       return { caiu: true, motivo: 'Instabilidade do Sistema' };
     }
 
-    // 5. Frases literais tradicionais
+    // 6. Frases literais tradicionais de logout ou falta de licenças
     if (t.includes('Todas as licenças estão em uso') || t.includes('Todas as licencas estao em uso')) {
       return { caiu: true, motivo: 'Falta de Licenças Disponíveis' };
     }
@@ -114,19 +150,9 @@ const CatiDowntimeEngine = (() => {
       return { caiu: true, motivo: 'Sessão Expirada' };
     }
 
-    // 6. Rota de logout com sessionInvalid=true ou logoutMessage
+    // 7. Rota de logout com sessionInvalid=true ou logoutMessage
     if (u.includes('/logout/logout.do') && (u.includes('sessionInvalid=true') || u.includes('logoutMessage'))) {
       return { caiu: true, motivo: 'Sessão Expirada / Queda de Acesso' };
-    }
-
-    // 7. Status HTTP 500, 502, 503 ou 504
-    if (/\b(500|502|503|504)\b/.test(t)) {
-      const hasErrorKeywords = /error|erro|gateway|service|server|servidor|unavailable|indispon|timeout|tempo/i.test(t);
-      const isShortErrorPage = t.trim().length < 250;
-      const isHttpHeader = /\bHTTP\b/i.test(t);
-      if (hasErrorKeywords || isShortErrorPage || isHttpHeader) {
-        return { caiu: true, motivo: 'Instabilidade de Servidor / Rede' };
-      }
     }
 
     return { caiu: false, motivo: null };
@@ -478,8 +504,17 @@ const CatiDowntimeEngine = (() => {
 
     const dateObj = agora instanceof Date ? agora : (agora ? new Date(agora) : new Date());
     const fim = dateObj.getTime();
-    const horaFim = formatarHoraBR(dateObj);
     const duracaoMs = Math.max(0, fim - (ativo.inicio || fim));
+
+    // Se a duração for inferior a 5 segundos (ex: 0 segundos de oscilação transitória no DOM),
+    // cancela o incidente espúrio, limpa do storage e NÃO exibe modal nem polui histórico!
+    if (duracaoMs < 5000) {
+      await storageRemove(storageApi, 'cati_downtime_active');
+      await storageSet(storageApi, { cati_downtime_active: null });
+      return null;
+    }
+
+    const horaFim = formatarHoraBR(dateObj);
     const durFmt = formatarDuracao(duracaoMs);
 
     const finalizado = {
@@ -635,6 +670,8 @@ const CatiDowntimeEngine = (() => {
     return false;
   }
 
+  let ultimoIncidenteModalId = null;
+
   /**
    * Renderiza a janela/modal de restabelecimento pós-login com botão de 1 clique para SLA.
    * @param {object} incidenteFinalizado
@@ -647,6 +684,13 @@ const CatiDowntimeEngine = (() => {
     if (!d || !d.body) return null;
 
     const inc = incidenteFinalizado || {};
+    if (inc.id && inc.id === ultimoIncidenteModalId) {
+      return null;
+    }
+    if (inc.id) {
+      ultimoIncidenteModalId = inc.id;
+    }
+
     const duracaoTexto = inc.duracaoTexto || (inc.duracaoMs ? formatarDuracao(inc.duracaoMs).textoExtenso : (inc.duracao || ''));
     const horaInicio = inc.horaInicio || (inc.inicio ? formatarHoraBR(new Date(inc.inicio)) : '--:--:--');
     const horaFim = inc.horaFim || (inc.fim ? formatarHoraBR(new Date(inc.fim)) : '--:--:--');
