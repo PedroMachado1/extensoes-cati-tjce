@@ -33,7 +33,8 @@ const DEFAULT_SETTINGS = {
   slaWorkEnd: "18:00",
   slaBoxScale: 100,
   scanSpeed: "normal",
-  waitingInfoDept: "2N CATI Remoto"
+  waitingInfoDept: "2N CATI Remoto",
+  waitingInfoDays: 7
 };
 
 const SUPPORTED_LANGUAGES = new Set(["pt", "en"]);
@@ -138,7 +139,8 @@ function normalizeSettings(raw) {
     slaWorkEnd: validateSummaryTime(obj.slaWorkEnd),
     slaBoxScale: clampNumber(obj.slaBoxScale, DEFAULT_SETTINGS.slaBoxScale, 70, 160),
     scanSpeed: ["turbo", "fast", "normal", "careful", "slow"].includes(obj.scanSpeed) ? obj.scanSpeed : DEFAULT_SETTINGS.scanSpeed,
-    waitingInfoDept: typeof obj.waitingInfoDept === "string" && obj.waitingInfoDept.trim() ? obj.waitingInfoDept.trim() : DEFAULT_SETTINGS.waitingInfoDept
+    waitingInfoDept: typeof obj.waitingInfoDept === "string" && obj.waitingInfoDept.trim() ? obj.waitingInfoDept.trim() : DEFAULT_SETTINGS.waitingInfoDept,
+    waitingInfoDays: clampNumber(obj.waitingInfoDays, DEFAULT_SETTINGS.waitingInfoDays, 1, 90)
   };
 }
 

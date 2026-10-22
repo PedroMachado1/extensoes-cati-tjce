@@ -236,6 +236,62 @@ class TestAssystScanner(unittest.TestCase):
         self.assertFalse(res["res4"]["elegivel"])
         self.assertFalse(res["res5"]["elegivel"], "Pausa feita por outro departamento não deve ser elegível para o 2N")
 
+    def test_verificar_elegibilidade_aguardando_info_dias_configuraveis(self):
+        """Verifica a regra com quantidade de dias mínimos configurável (ex: 5 dias, 6 dias, 10 dias)"""
+        test_script = f"""
+        const fs = require("fs");
+        const code = fs.readFileSync({json.dumps(self.js_path)}, "utf8");
+
+        global.chrome = {{
+            runtime: {{ onMessage: {{ addListener: () => {{}} }}, sendMessage: () => {{}} }},
+            storage: {{ local: {{ get: () => {{}}, set: () => {{}} }} }}
+        }};
+        global.MutationObserver = class {{ observe() {{}} }};
+        global.window = {{
+            location: {{ origin: "https://cati.tjce.jus.br", hostname: "cati.tjce.jus.br", href: "", hash: "" }},
+            addEventListener: () => {{}}
+        }};
+        global.document = {{
+            querySelector: () => null,
+            querySelectorAll: () => [],
+            getElementById: () => null,
+            createElement: () => ({{ style: {{}}, addEventListener: () => {{}}, appendChild: () => {{}} }}),
+            body: {{ appendChild: () => {{}} }},
+            addEventListener: () => {{}},
+            readyState: "complete"
+        }};
+
+        eval(code);
+        const fn = window.__catiVerificarElegibilidadeAguardandoInfo;
+
+        const agora = new Date(2026, 9, 7, 12, 0, 0);
+
+        // Pausado há 6 dias (01/10 às 10:00 até 07/10 às 12:00)
+        const acoes6Dias = [
+            {{ type: "Aguardando Info do Usuário", dateRaw: "01/10/2026 10:00", actingDept: "2N CATI Remoto" }}
+        ];
+
+        // 1. Com 6 dias configurados -> deve ser elegível
+        const resDias6 = fn(acoes6Dias, agora, "2N CATI Remoto", 6);
+
+        // 2. Com padrão 7 dias -> NÃO deve ser elegível
+        const resPadrao7 = fn(acoes6Dias, agora, "2N CATI Remoto", 7);
+
+        // 3. Com 5 dias configurados -> deve ser elegível
+        const resDias5 = fn(acoes6Dias, agora, "2N CATI Remoto", 5);
+
+        // 4. Com 10 dias configurados -> NÃO deve ser elegível
+        const resDias10 = fn(acoes6Dias, agora, "2N CATI Remoto", 10);
+
+        process.stdout.write(JSON.stringify({{ resDias6, resPadrao7, resDias5, resDias10 }}));
+        """
+        proc = subprocess.run(["node", "-e", test_script], capture_output=True, text=True, check=True)
+        res = json.loads(proc.stdout)
+        self.assertTrue(res["resDias6"]["elegivel"], "6 dias decorridos deve ser elegível para limite de 6 dias")
+        self.assertFalse(res["resPadrao7"]["elegivel"], "6 dias decorridos NÃO deve ser elegível para limite de 7 dias")
+        self.assertTrue(res["resDias5"]["elegivel"], "6 dias decorridos deve ser elegível para limite de 5 dias")
+        self.assertFalse(res["resDias10"]["elegivel"], "6 dias decorridos NÃO deve ser elegível para limite de 10 dias")
+
     def test_botoes_flutuantes_dimensoes_padronizadas(self):
         """Os botões flutuantes Localizar Agendados e Aguardando Info devem possuir dimensões padronizadas e idênticas"""
         css_path = os.path.join(
@@ -480,6 +536,71 @@ class TestAssystScanner(unittest.TestCase):
         res = json.loads(proc.stdout)
         self.assertEqual(res["agendadosDisplay"], "inline-flex", "Botão Localizar Agendados deve estar visível")
         self.assertEqual(res["dias7Display"], "inline-flex", "Botão Aguardando Info deve estar visível em qualquer lista geral do Assyst")
+
+    def test_atualizar_rotulo_botao_aguardando_info_dinamico(self):
+        """Verifica se a função __catiAtualizarRotuloBotaoAguardandoInfo atualiza dinamicamente o texto e o title do botão"""
+        test_script = f"""
+        const fs = require("fs");
+        const code = fs.readFileSync({json.dumps(self.js_path)}, "utf8");
+
+        global.chrome = {{
+            runtime: {{ onMessage: {{ addListener: () => {{}} }}, sendMessage: () => {{}} }},
+            storage: {{ local: {{ get: () => {{}}, set: () => {{}} }} }}
+        }};
+        global.MutationObserver = class {{ observe() {{}} }};
+        global.window = {{
+            location: {{ origin: "https://cati.tjce.jus.br", hostname: "cati.tjce.jus.br", href: "", hash: "" }},
+            addEventListener: () => {{}}
+        }};
+
+        const spanElement = {{ textContent: "Aguardando Info (7+ Dias)" }};
+        const btnElement = {{
+            id: "cati-floating-trigger-waiting-info",
+            title: "Verificar chamados na fila com 7+ dias de pausa 'Aguardando Info do Usuário' para encerramento",
+            style: {{ display: "none" }},
+            querySelector: (sel) => (sel === "span" ? spanElement : null)
+        }};
+
+        global.document = {{
+            querySelector: () => null,
+            querySelectorAll: () => [],
+            getElementById: (id) => (id === "cati-floating-trigger-waiting-info" ? btnElement : null),
+            createElement: () => ({{ style: {{}}, addEventListener: () => {{}}, appendChild: () => {{}} }}),
+            body: {{ appendChild: () => {{}} }},
+            addEventListener: () => {{}},
+            readyState: "complete"
+        }};
+
+        eval(code);
+        const fn = window.__catiAtualizarRotuloBotaoAguardandoInfo;
+        if (!fn) {{
+            process.stdout.write(JSON.stringify({{ error: "funcao_nao_encontrada" }}));
+            process.exit(0);
+        }}
+
+        // Atualiza para 6 dias
+        fn(6);
+        const text6 = spanElement.textContent;
+        const title6 = btnElement.title;
+
+        // Atualiza para 10 dias
+        fn(10);
+        const text10 = spanElement.textContent;
+        const title10 = btnElement.title;
+
+        // Fallback com valor inválido
+        fn("invalido");
+        const textFallback = spanElement.textContent;
+
+        process.stdout.write(JSON.stringify({{ text6, title6, text10, title10, textFallback }}));
+        """
+        proc = subprocess.run(["node", "-e", test_script], capture_output=True, text=True, check=True)
+        res = json.loads(proc.stdout)
+        self.assertEqual(res["text6"], "Aguardando Info (6+ Dias)")
+        self.assertIn("6+ dias", res["title6"])
+        self.assertEqual(res["text10"], "Aguardando Info (10+ Dias)")
+        self.assertIn("10+ dias", res["title10"])
+        self.assertEqual(res["textFallback"], "Aguardando Info (7+ Dias)")
 
 if __name__ == "__main__":
     unittest.main()

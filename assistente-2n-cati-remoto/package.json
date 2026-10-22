@@ -1,6 +1,6 @@
 {
   "name": "assistente-2n-cati-remoto",
-  "version": "3.2.3",
+  "version": "3.5.0",
   "description": "Assistente para 2N CATI Remoto com localizador de chamados Assyst e lembretes locais",
   "scripts": {
     "build": "python3 build.py"

@@ -3,7 +3,7 @@
 > **Extensão Firefox WebExtensions (Manifest V3)**  
 > **Público-alvo:** Analistas de Suporte do 2º Nível (2N CATI Remoto) — Tribunal de Justiça do Estado do Ceará (TJCE)  
 > **Ambiente Operacional:** `https://cati.tjce.jus.br/assystweb/*` e `https://web.whatsapp.com/*`  
-> **Versão:** 3.2.3  
+> **Versão:** 3.5.0  
 > **Autor:** Pedro Machado  
 
 ---
@@ -209,9 +209,10 @@ O localizador (`assyst-scanner.js`) automatiza a varredura da fila geral do 2N e
 - Os analistas podem marcar os chamados desejados com checkboxes ou clicar em **"Importar Selecionados"**.
 - Os agendamentos são gravados diretamente no armazenamento local da extensão com alarme configurado. No horário programado, o navegador emite uma notificação sonora e visual com o link direto para o chamado.
 
-### 4.5 Scanner de Chamados Aguardando Info há 7+ Dias
-- **Ativação Universal na Fila:** O botão flutuante `#cati-floating-trigger-waiting-info` (**"Aguardando Info (7+ Dias)"**) aparece no canto inferior direito em qualquer lista, pesquisa ou fila de chamados do Assyst, permitindo verificar os chamados pausados de qualquer equipe ou pesquisa personalizada. Pode ser recolhido a qualquer momento pelo menu de hambúrguer.
-- **Regra de Negócio (Encerramento por Inatividade):** Conforme regulamento do suporte, o analista deve aguardar até 7 dias por retorno do usuário após pausar por "Aguardando Info do Usuário". No 7º dia sem resposta, o chamado pode ser concluído como resolvido.
+### 4.5 Scanner de Chamados Aguardando Info (Dias Configuráveis)
+- **Ativação Universal na Fila e Rótulo Dinâmico:** O botão flutuante `#cati-floating-trigger-waiting-info` adapta seu texto automaticamente conforme a quantidade de dias configurada nas opções (ex.: **"Aguardando Info (6+ Dias)"**, **"Aguardando Info (7+ Dias)"**). Aparece no canto inferior direito em qualquer lista, pesquisa ou fila de chamados do Assyst, permitindo verificar os chamados pausados de qualquer equipe ou pesquisa personalizada. Pode ser recolhido a qualquer momento pelo menu de hambúrguer.
+- **Dias Mínimos Configuráveis:** Nas configurações da extensão (Popup), o campo **"Dias Mínimos de Inatividade (Aguardando Info)"** permite ao analista configurar livremente o período de inatividade desejado (de 1 a 90 dias, padrão regulamentar: 7 dias). As abas do Assyst abertas sincronizam imediatamente a alteração de dias sem necessidade de recarregar a página.
+- **Regra de Negócio (Encerramento por Inatividade):** Conforme regulamento do suporte, o analista deve aguardar o prazo estipulado por retorno do usuário após pausar por "Aguardando Info do Usuário". Ao atingir a quantidade mínima de dias configurada sem resposta, o chamado fica elegível para conclusão.
 - **Equipe Configurável nas Preferências:** Por padrão, a extensão valida se a pausa foi realizada por técnico da equipe **"2N CATI Remoto"** (coluna *Nome de Departamento de Serviço de acionamento*). Nas configurações da extensão (Popup), o campo **"Equipe de Verificação (Aguardando Info)"** permite alterar o nome da equipe conforme a necessidade do setor, mantendo total flexibilidade para outras equipes ou divisões de atendimento.
 - **Painel de Resultados:** Exibe modal moderno listando os chamados aptos com a contagem exata de dias decorridos (ex.: 8 dias, 12 dias), botão **"Abrir no Assyst"** (abrindo o chamado em nova guia) e botão **"Copiar Lista de Chamados"**.
 

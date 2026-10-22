@@ -26,7 +26,7 @@ class TestBuildPackage(unittest.TestCase):
             manifest = json.loads(manifest_raw)
             with open(os.path.join(self.ext_dir, "manifest.json"), "r", encoding="utf-8") as f:
                 source_manifest = json.load(f)
-            self.assertEqual(source_manifest.get("version"), "3.2.3", "Versão deve ser 3.2.3")
+            self.assertEqual(source_manifest.get("version"), "3.5.0", "Versão deve ser 3.5.0")
             self.assertEqual(manifest.get("version"), source_manifest.get("version"))
             gecko = source_manifest.get("browser_specific_settings", {}).get("gecko", {})
             self.assertEqual(
@@ -88,7 +88,7 @@ class TestBuildPackage(unittest.TestCase):
         updates = data["addons"][addon_id].get("updates", [])
         self.assertTrue(len(updates) > 0, "updates.json deve conter ao menos uma atualização")
         latest = updates[0]
-        self.assertEqual(latest.get("version"), "3.2.3")
+        self.assertEqual(latest.get("version"), "3.5.0")
         self.assertIn("update_link", latest)
         self.assertTrue(latest["update_link"].endswith(".xpi"))
 

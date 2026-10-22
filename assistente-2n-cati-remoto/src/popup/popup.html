@@ -260,7 +260,7 @@
                 <div class="settings-section" style="grid-template-columns: 1fr; margin-top: 8px;">
                     <div style="margin-bottom: 6px;">
                         <strong style="font-size: 12px; display: block;">🔍 Varredura da Fila (Assyst)</strong>
-                        <small style="display: block; color: var(--muted); font-size: 10px; margin-top: 2px;">Velocidade de busca e equipe do Aguardando Info</small>
+                        <small style="display: block; color: var(--muted); font-size: 10px; margin-top: 2px;">Velocidade, equipe e dias mínimos do Aguardando Info</small>
                     </div>
                     <div class="settings-grid">
                         <label class="field" style="grid-column: 1 / -1;">
@@ -274,11 +274,15 @@
                             </select>
                         </label>
                         <label class="field" style="grid-column: 1 / -1; margin-top: 4px;">
+                            <span>Dias Mínimos de Inatividade (Aguardando Info)</span>
+                            <input type="number" id="setting-waiting-info-days" class="date-input" style="text-align: left; padding: 6px 10px;" min="1" max="90" value="7">
+                        </label>
+                        <label class="field" style="grid-column: 1 / -1; margin-top: 4px;">
                             <span>Equipe de Verificação (Aguardando Info)</span>
                             <input type="text" id="setting-waiting-info-dept" class="date-input" style="text-align: left; padding: 6px 10px;" placeholder="2N CATI Remoto" value="2N CATI Remoto">
                         </label>
                     </div>
-                    <small style="display: block; color: var(--muted); font-size: 10px; margin-top: 4px;">Equipe/departamento verificado no histórico de ações para a pausa de 7+ dias.</small>
+                    <small style="display: block; color: var(--muted); font-size: 10px; margin-top: 4px;">Tempo de inatividade e equipe verificados no histórico de ações para elegibilidade.</small>
                 </div>
 
                 <p id="settings-status" class="status-message" aria-live="polite"></p>

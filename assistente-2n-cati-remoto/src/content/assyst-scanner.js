@@ -139,8 +139,8 @@
     return Number.isFinite(d.getTime()) ? d : null;
   }
 
-  // Verifica se o chamado está com 7+ dias de pausa por "Aguardando Info do Usuário"
-  function verificarElegibilidadeAguardandoInfo(acoes, dataReferencia, equipeAlvo = "2N CATI Remoto") {
+  // Verifica se o chamado está com X+ dias de pausa por "Aguardando Info do Usuário"
+  function verificarElegibilidadeAguardandoInfo(acoes, dataReferencia, equipeAlvo = "2N CATI Remoto", diasMinimos = 7) {
     if (!Array.isArray(acoes) || acoes.length === 0) {
       return { elegivel: false, motivo: "sem_acoes" };
     }
@@ -224,10 +224,12 @@
 
     const diffMs = agora.getTime() - ultimaPausaUsuario._dt.getTime();
     const diasDecorridos = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const limiteDias = Number.isInteger(Number(diasMinimos)) && Number(diasMinimos) > 0 ? Number(diasMinimos) : 7;
 
     return {
-      elegivel: diasDecorridos >= 7,
+      elegivel: diasDecorridos >= limiteDias,
       diasDecorridos,
+      diasMinimos: limiteDias,
       dataPausa: ultimaPausaUsuario._dt,
       dataPausaStr: ultimaPausaUsuario.dateRaw || ultimaPausaUsuario.dataStr,
       ultimaAcao: ultimaPausaUsuario
@@ -267,7 +269,7 @@
     }
     btnAgendados.style.display = "inline-flex";
 
-    // 2. Botão Aguardando Info (7+ Dias)
+    // 2. Botão Aguardando Info (X+ Dias)
     let btn7Dias = document.getElementById("cati-floating-trigger-waiting-info");
     if (!btn7Dias) {
       btn7Dias = document.createElement("button");
@@ -286,8 +288,38 @@
       document.body.appendChild(btn7Dias);
     }
     btn7Dias.style.display = "inline-flex";
+
+    // Atualiza o texto do botão com a configuração salva
+    obterConfiguracoesVarredura().then(cfg => {
+      atualizarRotuloBotaoAguardandoInfo(cfg.waitingInfoDays);
+    }).catch(() => {});
   }
   window.__catiCriarBotoesFlutuantes = criarBotoesFlutuantes;
+
+  // Atualiza dinamicamente o texto e o title do botão flutuante de Aguardando Info
+  function atualizarRotuloBotaoAguardandoInfo(dias = 7) {
+    const btn = document.getElementById("cati-floating-trigger-waiting-info");
+    if (!btn) return;
+    const numDias = Number.isInteger(Number(dias)) && Number(dias) > 0 ? Number(dias) : 7;
+    btn.title = `Verificar chamados na fila com ${numDias}+ dias de pausa 'Aguardando Info do Usuário' para encerramento`;
+    const span = btn.querySelector("span");
+    if (span) {
+      span.textContent = `Aguardando Info (${numDias}+ Dias)`;
+    }
+  }
+  window.__catiAtualizarRotuloBotaoAguardandoInfo = atualizarRotuloBotaoAguardandoInfo;
+
+  // Listener para sincronizar o rótulo do botão caso o usuário altere as configurações no popup
+  if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === "local" && changes.agenda_settings) {
+        const nv = changes.agenda_settings.newValue;
+        if (nv && nv.waitingInfoDays != null) {
+          atualizarRotuloBotaoAguardandoInfo(nv.waitingInfoDays);
+        }
+      }
+    });
+  }
 
   // Atualizar visibilidade dos botões flutuantes dinamicamente
   function atualizarVisibilidadeBotaoFlutuante() {
@@ -332,14 +364,16 @@
   async function obterConfiguracoesVarredura() {
     return new Promise(resolve => {
       if (!chrome.storage || !chrome.storage.local) {
-        resolve({ scanSpeed: "normal", waitingInfoDept: "2N CATI Remoto" });
+        resolve({ scanSpeed: "normal", waitingInfoDept: "2N CATI Remoto", waitingInfoDays: 7 });
         return;
       }
       chrome.storage.local.get(["agenda_settings"], result => {
         const s = result?.agenda_settings || {};
+        const days = parseInt(s.waitingInfoDays, 10);
         resolve({
           scanSpeed: s.scanSpeed || "normal",
-          waitingInfoDept: (typeof s.waitingInfoDept === "string" && s.waitingInfoDept.trim()) ? s.waitingInfoDept.trim() : "2N CATI Remoto"
+          waitingInfoDept: (typeof s.waitingInfoDept === "string" && s.waitingInfoDept.trim()) ? s.waitingInfoDept.trim() : "2N CATI Remoto",
+          waitingInfoDays: Number.isInteger(days) && days > 0 ? days : 7
         });
       });
     });
@@ -886,7 +920,7 @@
     return acoes;
   }
 
-  // Iniciar processo de varredura de chamados com 7+ dias de pausa Aguardando Info
+  // Iniciar processo de varredura de chamados com X+ dias de pausa Aguardando Info
   async function iniciarVarreduraAguardandoInfo() {
     cancelScan = false;
 
@@ -899,11 +933,12 @@
     const infoLimite = obterLimiteVarreduraGrade();
     const config = await obterConfiguracoesVarredura();
     const equipeAlvo = config.waitingInfoDept || "2N CATI Remoto";
+    const diasMinimos = config.waitingInfoDays || 7;
     let speedKey = config.scanSpeed || "normal";
     let speed = PERFIS_VELOCIDADE[speedKey] || PERFIS_VELOCIDADE.normal;
 
     const subTexto = `Varrendo fila • ${speed.nome} • Filtro: ${infoLimite.rotulo}`;
-    const panel = criarPainelBase("Aguardando Info há 7+ Dias", subTexto, config);
+    const panel = criarPainelBase(`Aguardando Info há ${diasMinimos}+ Dias`, subTexto, config);
 
     if (infoLimite.isAltoVolume) {
       mostrarToast(`⚠️ Filtro de ${infoLimite.rotulo} chamados ativo. A verificação pode demorar um pouco.`);
@@ -1005,7 +1040,7 @@
         acoes = extrairAcoesDoDOMLocal();
       }
 
-      const res = verificarElegibilidadeAguardandoInfo(acoes, new Date(), equipeAlvo);
+      const res = verificarElegibilidadeAguardandoInfo(acoes, new Date(), equipeAlvo, diasMinimos);
       if (res && res.elegivel) {
         elegiveis.push({
           chamado,
@@ -1028,20 +1063,20 @@
     }
 
     if (elegiveis.length === 0) {
-      exibirNenhumResultadoAguardandoInfo();
+      exibirNenhumResultadoAguardandoInfo(diasMinimos);
       return;
     }
 
     elegiveis.sort((a, b) => b.diasDecorridos - a.diasDecorridos);
-    exibirResultadosAguardandoInfo(elegiveis);
+    exibirResultadosAguardandoInfo(elegiveis, diasMinimos);
   }
   window.__catiIniciarVarreduraAguardandoInfo = iniciarVarreduraAguardandoInfo;
 
   // Exibe o painel de resultados com os chamados elegíveis para encerramento
-  function exibirResultadosAguardandoInfo(lista) {
+  function exibirResultadosAguardandoInfo(lista, diasMinimos = 7) {
     const config = { scanSpeed: "normal" };
     const panel = criarPainelBase(
-      `Aguardando Info há 7+ Dias (${lista.length})`,
+      `Aguardando Info há ${diasMinimos}+ Dias (${lista.length})`,
       "Chamados elegíveis para encerramento por falta de retorno",
       config
     );
@@ -1049,8 +1084,8 @@
     const banner = document.createElement("div");
     banner.className = "cati-waiting-info-banner";
     banner.innerHTML = `
-      <div style="font-weight: 600; margin-bottom: 2px;">⚠️ Prazo regulamentar de 7 dias atingido!</div>
-      <div style="font-size: 11px; opacity: 0.9;">Estes chamados foram pausados por "Aguardando Info do Usuário" há 7 dias ou mais sem resposta do solicitante e podem ser encerrados na sua fila.</div>
+      <div style="font-weight: 600; margin-bottom: 2px;">⚠️ Prazo regulamentar de ${diasMinimos} dias atingido!</div>
+      <div style="font-size: 11px; opacity: 0.9;">Estes chamados foram pausados por "Aguardando Info do Usuário" há ${diasMinimos} dias ou mais sem resposta do solicitante e podem ser encerrados na sua fila.</div>
     `;
     panel.appendChild(banner);
 
@@ -1147,15 +1182,16 @@
     footer.querySelector("#cati-btn-fechar-7d").onclick = () => fecharPainel();
   }
 
-  function exibirNenhumResultadoAguardandoInfo() {
-    const panel = criarPainelBase("Aguardando Info há 7+ Dias", "Resultado da análise da sua fila");
+  function exibirNenhumResultadoAguardandoInfo(diasMinimos = 7) {
+    const minDias = Number.isInteger(Number(diasMinimos)) && Number(diasMinimos) > 0 ? Number(diasMinimos) : 7;
+    const panel = criarPainelBase(`Aguardando Info há ${minDias}+ Dias`, "Resultado da análise da sua fila");
     const empty = document.createElement("div");
     empty.className = "cati-empty-state";
     empty.innerHTML = `
       <div style="font-size: 32px; margin-bottom: 8px;">🎉</div>
-      <h4 style="margin: 0 0 6px 0; color: #1e293b; font-size: 14px;">Nenhum chamado pendente há 7+ dias!</h4>
+      <h4 style="margin: 0 0 6px 0; color: #1e293b; font-size: 14px;">Nenhum chamado pendente há ${minDias}+ dias!</h4>
       <p style="margin: 0; color: #64748b; font-size: 12px; line-height: 1.4;">
-        Todos os chamados com status "Aguardando Info do Usuário" na sua fila foram pausados há menos de 7 dias ou já tiveram retorno.
+        Todos os chamados com status "Aguardando Info do Usuário" na sua fila foram pausados há menos de ${minDias} dias ou já tiveram retorno.
       </p>
     `;
     panel.appendChild(empty);
