@@ -26,8 +26,14 @@ class TestBuildPackage(unittest.TestCase):
             manifest = json.loads(manifest_raw)
             with open(os.path.join(self.ext_dir, "manifest.json"), "r", encoding="utf-8") as f:
                 source_manifest = json.load(f)
-            self.assertEqual(source_manifest.get("version"), "3.2.2", "Versão deve ser 3.2.2")
+            self.assertEqual(source_manifest.get("version"), "3.2.3", "Versão deve ser 3.2.3")
             self.assertEqual(manifest.get("version"), source_manifest.get("version"))
+            gecko = source_manifest.get("browser_specific_settings", {}).get("gecko", {})
+            self.assertEqual(
+                gecko.get("update_url"),
+                "https://raw.githubusercontent.com/PedroMachado1/extensoes-cati-tjce/main/updates.json",
+                "update_url deve estar configurado no gecko"
+            )
 
     def test_source_zip_package_integrity(self):
         """Verifica a integridade do arquivo zip de código-fonte"""
@@ -68,6 +74,23 @@ class TestBuildPackage(unittest.TestCase):
             popup_js_path
         ], capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, f"Erro de sintaxe no popup.js:\n{proc.stderr}")
+ 
+    def test_updates_json_validity(self):
+        """Valida que o arquivo updates.json na raiz existe e possui a estrutura válida exigida pelo Firefox."""
+        root_dir = os.path.abspath(os.path.join(self.ext_dir, ".."))
+        updates_path = os.path.join(root_dir, "updates.json")
+        self.assertTrue(os.path.exists(updates_path), f"Arquivo updates.json não encontrado em: {updates_path}")
+        with open(updates_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        addon_id = "assistente-2n-cati-remoto@pedromachado"
+        self.assertIn("addons", data)
+        self.assertIn(addon_id, data["addons"])
+        updates = data["addons"][addon_id].get("updates", [])
+        self.assertTrue(len(updates) > 0, "updates.json deve conter ao menos uma atualização")
+        latest = updates[0]
+        self.assertEqual(latest.get("version"), "3.2.3")
+        self.assertIn("update_link", latest)
+        self.assertTrue(latest["update_link"].endswith(".xpi"))
 
 if __name__ == "__main__":
     unittest.main()

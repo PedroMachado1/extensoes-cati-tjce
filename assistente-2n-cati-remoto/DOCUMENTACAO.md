@@ -3,7 +3,7 @@
 > **Extensão Firefox WebExtensions (Manifest V3)**  
 > **Público-alvo:** Analistas de Suporte do 2º Nível (2N CATI Remoto) — Tribunal de Justiça do Estado do Ceará (TJCE)  
 > **Ambiente Operacional:** `https://cati.tjce.jus.br/assystweb/*` e `https://web.whatsapp.com/*`  
-> **Versão:** 3.2.2  
+> **Versão:** 3.2.3  
 > **Autor:** Pedro Machado  
 
 ---

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "__MSG_extensionName__",
   "short_name": "Assistente 2N",
-  "version": "3.2.2",
+  "version": "3.2.3",
   "description": "__MSG_extensionDescription__",
   "default_locale": "pt_BR",
   "author": "Pedro Machado",
@@ -75,6 +75,7 @@
     "gecko": {
       "id": "assistente-2n-cati-remoto@pedromachado",
       "strict_min_version": "115.0",
+      "update_url": "https://raw.githubusercontent.com/PedroMachado1/extensoes-cati-tjce/main/updates.json",
       "data_collection_permissions": {
         "required": [
           "none"
